@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embabi Football Games</title>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --dark-gold: #c5a059;
+            --bg-black: #0d0d0d;
+            --card-bg: #1a1a1a;
+            --text-light: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1, h2, h3 {
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .section {
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--gold), var(--dark-gold));
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px 5px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        input, select {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--gold);
+            background: #222;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .box-card {
+            background: #2b2b2b;
+            border: 2px solid var(--dark-gold);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .box-card:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #222;
+            border-radius: 8px;
+            border: 1px dashed var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚽ Embabi Football Games ⚽</h1>
+    
+    <!-- اختيار وضع اللعب -->
+    <div id="mode-select" class="section active">
+        <h2>اختر وضع اللعب</h2>
+        <button onclick="setMode('single')">لاعب ضد الروبوت الذكي 🤖</button>
+        <button onclick="setMode('local')">لاعبين (على جهاز واحد) 👥</button>
+        <button onclick="setMode('online')">غرفة أونلاين 🌐</button>
+        
+        <div id="players-input" style="display:none; margin-top:15px;">
+            <input type="text" id="p1-name" placeholder="اسم اللاعب الأول">
+            <input type="text" id="p2-name" placeholder="اسم اللاعب الثاني">
+            <br>
+            <button onclick="saveNames()">تأكيد الأسماء</button>
+        </div>
+
+        <div id="online-input" style="display:none; margin-top:15px;">
+            <h3>رمز الغرفة الخاصة بك: <span id="room-code" style="color:var(--gold)"></span></h3>
+            <input type="text" id="join-code" placeholder="أدخل كود الانضمام (6 أرقام/حروف)">
+            <br>
+            <button onclick="connectRoom()">ارتباط بالموبايل الآخر</button>
+        </div>
+    </div>
+
+    <!-- القائمة الرئيسية للألعاب -->
+    <div id="game-menu" class="section">
+        <h2 id="welcome-msg">مرحباً بك! اختر اللعبة</h2>
+        <button onclick="showGame('auction')">🔨 المزاد برو ماكس (خماسي)</button>
+        <button onclick="showGame('deal')">💼 Deal or No Deal</button>
+        <button onclick="showGame('extra')">🎮 قسم الألعاب الإضافية</button>
+    </div>
+
+    <!-- لعبة 1: المزاد برو ماكس -->
+    <div id="auction-game" class="section">
+        <h2>🔨 لعبة المزاد برو ماكس</h2>
+        <p>حدد ميزانيتك أولاً (من 50 مليون إلى 2 مليار):</p>
+        <select id="budget-select">
+            <option value="50M">50 مليون</option>
+            <option value="200M">200 مليون</option>
+            <option value="500M">500 مليون</option>
+            <option value="1B">1 مليار</option>
+            <option value="2B">2 مليار</option>
+        </select>
+        <br><br>
+        <button onclick="startAuction()" style="background: red; color: white;">🔥 NO RISK NO FUN 🔥</button>
+        
+        <div id="auction-result" class="result-box" style="display:none;">
+            <h3>اللاعب الناتج من المزاد:</h3>
+            <p id="player-revealed" style="font-size: 22px; font-weight: bold; color: var(--gold);"></p>
+        </div>
+        <br>
+        <button onclick="backToMenu()">الرجوع للقائمة</button>
+    </div>
+
+    <!-- لعبة 2: Deal or No Deal -->
+    <div id="deal-game" class="section">
+        <h2>💼 لعبة Deal or No Deal</h2>
+        <h3 id="position-title">المركز الحالي: حارس مرمى</h3>
+        <p>اختر أحد الصناديق الـ 4 لفتح كارت اللاعب:</p>
+        
+        <div class="card-grid">
+            <div class="box-card" onclick="openBox(1)">📦 صندوق 1</div>
+            <div class="box-card" onclick="openBox(2)">📦 صندوق 2</div>
+            <div class="box-card" onclick="openBox(3)">📦 صندوق 3</div>
+            <div class="box-card" onclick="openBox(4)">📦 صندوق 4</div>
+        </div>
+
+        <div id="deal-result" class="result-box" style="display:none;">
+            <p id="box-content" style="font-size: 20px; color: var(--gold);"></p>
+            <button onclick="nextPosition()">المركز التالي ➔</button>
+        </div>
+        <br>
+        <button onclick="backToMenu()">الرجوع للقائمة</button>
+    </div>
+
+    <!-- قسم الألعاب الإضافية -->
+    <div id="extra-game" class="section">
+        <h2>🎮 قسم الألعاب الإضافية</h2>
+        <p>قريباً: تحدي التخمين وتحدي تشكيلة الموسم!</p>
+        <button onclick="backToMenu()">الرجوع للقائمة</button>
+    </div>
+
+</div>
+
+<script>
+    // بيانات اللاعبين (أيكونز + حاليين)
+    const iconsAndCurrent = [
+        "رونالدو الظاهرة (Icon)", "كريستيانو رونالدو", "ليونيل ميسي", "زين الدين زيدان (Icon)",
+        "كيليان إمبابي", "فينيسيوس جونيور", "رونالدينيو (Icon)", "إرلينج هالاند",
+        "مالديني (Icon)", "جود بيلينجهام", "لامين يامال", "تييري هنري (Icon)"
+    ];
+
+    const dealPositions = [
+        { title: "حارس المرمى", players: ["نوير", "كورتوا", "بوفون (Icon)", "أليسون"] },
+        { title: "المدافع", players: ["فان دايك", "مالديني (Icon)", "روديجر", "راموس"] },
+        { title: "الوسط", players: ["مودريتش", "تشافي (Icon)", "دي بروين", "بيرلو (Icon)"] },
+        { title: "الوسط المهاجم", players: ["زيدان (Icon)", "بيلينجهام", "كاكا (Icon)", "موسيالا"] },
+        { title: "الهجوم", players: ["إمبابي", "كريستيانو رونالدو", "ميسي", "رونالدو الظاهرة (Icon)"] }
+    ];
+
+    let currentPosIndex = 0;
+
+    function setMode(mode) {
+        if(mode === 'local') {
+            document.getElementById('players-input').style.display = 'block';
+            document.getElementById('online-input').style.display = 'none';
+        } else if(mode === 'online') {
+            document.getElementById('online-input').style.display = 'block';
+            document.getElementById('players-input').style.display = 'none';
+            document.getElementById('room-code').innerText = Math.random().toString(36).substring(2, 8).toUpperCase();
+        } else {
+            showMenu("اللاعب 1 ضد الروبوت الذكي");
+        }
+    }
+
+    function saveNames() {
+        let p1 = document.getElementById('p1-name').value || "اللاعب 1";
+        let p2 = document.getElementById('p2-name').value || "اللاعب 2";
+        showMenu(`${p1} 🆚 ${p2}`);
+    }
+
+    function connectRoom() {
+        let code = document.getElementById('join-code').value;
+        if(code.length === 6) {
+            showMenu("تم الاتصال أونلاين عبر الغرفة!");
+        } else {
+            alert("برجاء إدخال كود مكون من 6 أرقام وحروف!");
+        }
+    }
+
+    function showMenu(msg) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-menu').classList.add('active');
+        if(msg) document.getElementById('welcome-msg').innerText = msg;
+    }
+
+    function showGame(gameId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${gameId}-game`).classList.add('active');
+        if(gameId === 'deal') resetDeal();
+    }
+
+    function backToMenu() {
+        showMenu();
+    }
+
+    // لعبة المزاد
+    function startAuction() {
+        let budget = document.getElementById('budget-select').value;
+        let randomPlayer = iconsAndCurrent[Math.floor(Math.random() * iconsAndCurrent.length)];
+        let isGood = Math.random() > 0.3 ? "🔥 لاعب أسطوري / ممتاز!" : "⚠️ لاعب متوسط!";
+        
+        document.getElementById('auction-result').style.display = 'block';
+        document.getElementById('player-revealed').innerText = `${randomPlayer} \n (${isGood}) \n بميزانية: ${budget}`;
+    }
+
+    // لعبة Deal or No Deal
+    function resetDeal() {
+        currentPosIndex = 0;
+        updateDealUI();
+    }
+
+    function updateDealUI() {
+        document.getElementById('position-title').innerText = `المركز الحالي: ${dealPositions[currentPosIndex].title}`;
+        document.getElementById('deal-result').style.display = 'none';
+    }
+
+    function openBox(boxNum) {
+        let currentPool = dealPositions[currentPosIndex].players;
+        let pickedPlayer = currentPool[boxNum - 1];
+        
+        document.getElementById('deal-result').style.display = 'block';
+        document.getElementById('box-content').innerText = `حصلت في صندوق ${boxNum} على: ${pickedPlayer}`;
+    }
+
+    function nextPosition() {
+        currentPosIndex++;
+        if(currentPosIndex < dealPositions.length) {
+            updateDealUI();
+        } else {
+            alert("تهانينا! أكملت اختيار جميع مراكز التشكيلة 🎉");
+            backToMenu();
+        }
+    }
+</script>
+
+</body>
+</html>
